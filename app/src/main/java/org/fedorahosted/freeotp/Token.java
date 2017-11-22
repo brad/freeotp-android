@@ -20,6 +20,7 @@
 
 package org.fedorahosted.freeotp;
 
+import java.io.File;
 import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -62,23 +63,12 @@ public class Token {
     private WearTokenCategory wearTokenCategory = WearTokenCategory.NONE;
 
     private Token(Uri uri, boolean internal) throws TokenUriInvalidException {
-        if (!uri.getScheme().equals("otpauth"))
-            throw new TokenUriInvalidException();
-
-        if (uri.getAuthority().equals("totp"))
-            type = TokenType.TOTP;
-        else if (uri.getAuthority().equals("hotp"))
-            type = TokenType.HOTP;
-        else
-            throw new TokenUriInvalidException();
+        validateTokenURI(uri);
 
         String path = uri.getPath();
-        if (path == null)
-            throw new TokenUriInvalidException();
-
         // Strip the path of its leading '/'
-        for (int i = 0; path.charAt(i) == '/'; i++)
-            path = path.substring(1);
+        path = path.replaceFirst("/","");
+
         if (path.length() == 0)
             throw new TokenUriInvalidException();
 
@@ -113,6 +103,7 @@ public class Token {
             if (p == null)
                 p = "30";
             period = Integer.parseInt(p);
+            period = (period > 0) ? period : 30; // Avoid divide-by-zero
         } catch (NumberFormatException e) {
             throw new TokenUriInvalidException();
         }
@@ -143,6 +134,26 @@ public class Token {
             setIssuer(uri.getQueryParameter("issueralt"));
             setLabel(uri.getQueryParameter("labelalt"));
         }
+    }
+
+    private void validateTokenURI(Uri uri) throws TokenUriInvalidException{
+        if (uri == null) throw new TokenUriInvalidException();
+
+        if (uri.getScheme() == null || !uri.getScheme().equals("otpauth")){
+            throw new TokenUriInvalidException();
+        }
+
+        if (uri.getAuthority() == null) throw new TokenUriInvalidException();
+
+        if (uri.getAuthority().equals("totp")) {
+            type = TokenType.TOTP;
+        } else if (uri.getAuthority().equals("hotp"))
+            type = TokenType.HOTP;
+        else {
+            throw new TokenUriInvalidException();
+        }
+
+        if (uri.getPath() == null) throw new TokenUriInvalidException();
     }
 
     private String getHOTP(long counter) {
@@ -301,7 +312,22 @@ public class Token {
         return toUri().toString();
     }
 
+    /**
+     * delete image, which is attached to the token from storage
+     */
+    public void deleteImage() {
+        Uri imageUri = getImage();
+        if (imageUri != null) {
+            File image = new File(imageUri.getPath());
+            if (image.exists())
+                image.delete();
+        }
+    }
+
     public void setImage(Uri image) {
+        //delete old token image, before assigning the new one
+        deleteImage();
+
         imageAlt = null;
         if (image == null)
             return;
