@@ -59,9 +59,6 @@ import android.view.View;
 import android.view.WindowManager.LayoutParams;
 import android.widget.GridView;
 
-import org.fedorahosted.freeotp.add.AddActivity;
-import org.fedorahosted.freeotp.add.ScanActivity;
-
 public class MainActivity extends GPSActivity implements OnMenuItemClickListener {
     private TokenAdapter mTokenAdapter;
     public static final String ACTION_IMAGE_SAVED = "org.fedorahosted.freeotp.ACTION_IMAGE_SAVED";
