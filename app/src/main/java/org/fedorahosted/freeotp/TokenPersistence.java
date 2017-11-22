@@ -61,8 +61,7 @@ public class TokenPersistence {
     private final Context ctx;
 
     private List<String> getTokenOrder() {
-        Type type = new TypeToken<List<String>>() {
-        }.getType();
+        Type type = new TypeToken<List<String>>() {}.getType();
         String str = prefs.getString(ORDER, "[]");
         List<String> order = gson.fromJson(str, type);
         return order == null ? new LinkedList<String>() : order;
@@ -239,7 +238,6 @@ public class TokenPersistence {
         }
     }
 
-
     public void sync(GoogleApiClient mGoogleClient) {
         PutDataMapRequest dataMap = PutDataMapRequest.create("/tokens");
         int length = length();
@@ -252,7 +250,5 @@ public class TokenPersistence {
 
         PutDataRequest request = dataMap.asPutDataRequest();
         Wearable.DataApi.putDataItem(mGoogleClient, request);
-
     }
-
 }
